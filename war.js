@@ -10,14 +10,13 @@ class Card {
 
 class Deck {
   constructor() {
-    // this.length = 52
     this.cards = []
+    this.setDeck()
   }
 
-  setCards() {
+  setDeck() {
     const suits = ["Hearts", "Spades", "Clubs", "Diamonds"]
     const ranks = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
-    // const cards = []
 
     suits.forEach(suit => {
       let i = 1;
@@ -26,22 +25,7 @@ class Deck {
       })
     })
 
-    // return cards
-  }
-
-  draw() {
-    if (this.cards.length > 0) {
-      let index = Math.floor(Math.random() * this.cards.length)
-      let card = this.cards[index]
-
-      // this.length--
-      this.cards.splice(index, 1)
-
-      return card
-    }
-    else {
-      console.log("Deck is empty")
-    }
+    this.shuffle()
   }
 
   shuffle() {
@@ -58,134 +42,79 @@ class Deck {
     }
   }
 
-  collect(cards) { // cards must be an array
-    this.cards.unshift(...cards)
-  }
-
-  getScore(card) {
-    return card.score
+  draw() {
+    if (this.cards.length > 0) {
+      return this.cards.pop()
+    }
   }
 }
 
 // ***************************************
 
-class Player extends Deck {
+class War {
   constructor() {
-    super()
-    this.cards = new Deck
-  }
-}
-
-// ***************************************
-
-class War extends Deck {
-  constructor(player1, player2) { // instances of Player
-    super()
-    this.pile = new Deck
-    this.player1 = player1
-    this.player2 = player2
+    this.pile = []
+    this.player1 = []
+    this.player2 = []
+    this.divideCards()
+    this.game()
   }
 
   divideCards() {
-    this.pile.setCards()
-    this.pile.shuffle()
-
-    this.player1.cards = this.pile.cards.slice(0, (this.pile.cards.length / 2))
-    this.player2.cards = this.pile.cards.slice((this.pile.cards.length / 2), this.pile.cards.length)
-
-    this.clearPile()
+    const { cards } = new Deck
+    this.player1.push(...cards.splice(0, 26))
+    this.player2.push(...cards)
   }
 
-  addToPile(cards) {
-    this.pile.cards.push(...cards)
-  }
+  game() {
+    while (this.player1.length > 0 && this.player2.length > 0) {
+      let player1Card = this.player1.pop()
+      let player2Card = this.player2.pop()
+      this.displayCards(player1Card, player2Card)
 
-  clearPile() {
-    this.pile = new Deck
-  }
+      if (player1Card.score === player2Card.score) { // war
+        this.pile.push(player1Card, player2Card)
+        console.log("WAR\n\n")
+        this.war()
+      }
+      else if (player1Card.score > player2Card.score) {
+        this.player1.unshift(player2Card, player1Card, ...this.pile.splice(0))
+        console.log("Player 1 wins the round!\n\n")
+      }
+      else { // player 2 wins
+        this.player2.unshift(player1Card, player2Card, ...this.pile.splice(0))
+        console.log("Player 2 wins the round!\n\n")
+      }
+    }
 
-  // compareScores() {
-  //   return this.compare(this.pile.cards[-1].getScore(), this.pile.cards[-2].getScore())
-  // }
-
-  compare(card1 = new Card, card2 = new Card) {
-    // if (score1 === score2) {
-    //   return 0
-    // }
-    // else {
-    //   if (score1 > score2) {
-    //     return 1
-    //   }
-    //   else { // score2 > score1
-    //     return 2
-    //   }
-    // }
-
-    // let card1 = this.pile.cards[-1]
-    // let card2 = this.pile.cards[-2]
-
-    if (this.getScore(card1) === this.getScore(card2)) {
-      return 0 // go to war
+    if (this.player1.length > 0) {
+      console.log("Player 1 wins the game!")
+      console.log(`Player 1 has ${this.player1.length} cards`)
     }
     else {
-      if (this.getScore(card1) > this.getScore(card2)) {
-        return 1
-      }
-      else {
-        return 2
-      }
+      console.log("Player 2 wins the game!")
+      console.log(`Player 1 has ${this.player2.length} cards`)
     }
   }
 
   war() {
-
+    if (this.player1.length < 4 || this.player2.length < 4) {
+      if (this.player1.length < 4) { // player 2 wins
+        this.player2.push(...this.player1.splice(0), ...this.pile.splice(0))
+      }
+      else { // player 1 wins
+        this.player1.push(...this.player2.splice(0), ...this.pile.splice(0))
+      }
+    }
+    else { // both players have enough cards for war
+      this.pile.push(...this.player1.splice(-3, 3), ...this.player2.splice(-3, 3))
+    }
   }
 
-  // reveal() {
-  //   // return this.pile.cards[-1]
-  // }
+  displayCards(p1Card, p2Card) {
+    console.log(`Player 1's card: ${p1Card.rank} of ${p1Card.suit}`)
+    console.log(`Player 2's card: ${p2Card.rank} of ${p2Card.suit}`)
+  }
 }
 
-// TEST ****************************************
-
-// let deck = new Deck
-// deck.setCards()
-// deck.shuffle()
-// // console.log("Shuffled deck:")
-// // console.log(deck.cards)
-
-// let card = new Card("some suit", "some rank", 10)
-// let arr = []
-// arr.push(card)
-
-// deck.collect(arr)
-// console.log(deck.cards)
-
-let me = new Player
-let notMe = new Player
-
-let war = new War(me, notMe)
-war.divideCards()
-
-// console.log("Me's cards:")
-// console.log(me.cards)
-// console.log(me.cards.length)
-// console.log("Not Me's cards:")
-// console.log(notMe.cards)
-// console.log(notMe.cards.length)
-
-// console.log(me.draw())
-// console.log(notMe.draw())
-// war.addToPile([me.draw(), notMe.draw()])
-// console.log(war.pile)
-// console.log(war.compareScores())
-
-let meCard = me.draw()
-let notMeCard = notMe.draw()
-// war.addToPile(meCard, notMeCard)
-// console.log(meCard)
-// console.log(notMeCard)
-// console.log(war.compare(meCard, notMeCard))
-
-console.log(me.cards)
-console.log(notMe.cards)
+let game = new War
